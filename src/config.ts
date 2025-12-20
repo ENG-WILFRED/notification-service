@@ -28,10 +28,11 @@ interface Config {
   smtp: SmtpConfig;
   twilio: TwilioConfig;
   env: string;
+  mockMode: boolean;
 }
 
 const config: Config = {
-  port: Number(process.env.PORT) || 3000,
+  port: Number(process.env.PORT) || 5371,
   kafka: {
     clientId: process.env.KAFKA_CLIENT_ID || 'notification-service',
     brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
@@ -49,7 +50,8 @@ const config: Config = {
     authToken: process.env.TWILIO_AUTH_TOKEN,
     from: process.env.TWILIO_FROM
   },
-  env: process.env.NODE_ENV || 'development'
+  env: process.env.NODE_ENV || 'development',
+  mockMode: process.env.MOCK_MODE === 'true' || !process.env.KAFKA_BROKER
 };
 
 export default config;
