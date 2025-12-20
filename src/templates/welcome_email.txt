@@ -1,0 +1,8 @@
+Hello {{ name }},
+
+Welcome! This is a sample welcome email.
+
+Message: {{ message }}
+
+Thanks,
+Team
