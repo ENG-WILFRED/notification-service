@@ -62,7 +62,7 @@ async function notifyRoute(req: Request, res: Response): Promise<void> {
   console.log(`[NOTIFY] Request body: to=${to}, channel=${channel}, template=${template}, data_keys=${Object.keys(data || {}).join(',')}`);
   // Validation
   if (!to || !channel || !template) {
-    const missingFields = [];
+    const missingFields: string[] = [];
     if (!to) missingFields.push('to');
     if (!channel) missingFields.push('channel');
     if (!template) missingFields.push('template');
