@@ -10,6 +10,14 @@ const options = {
     },
     servers: [
       {
+        url: 'https://notification-service-consumer.onrender.com',
+        description: 'consumer------Production server'
+      },
+      {
+        url: 'https://notification-service-producer.onrender.com',
+        description: 'producer-----Production server'
+      },
+      {
         url: 'http://localhost:5371',
         description: 'Development server'
       }
