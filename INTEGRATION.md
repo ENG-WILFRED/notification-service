@@ -45,15 +45,15 @@ Add these variables to your environment or `.env` (we provide `.env.example`):
 - `KAFKA_SSL_CA_LOCATION` — Path to the CA file (relative to project root), e.g. `ca.pem`
 - `MOCK_MODE` — `true` to run without Kafka (producer will queue in memory)
 
-Example `.env` additions:
+Example `.env` additions (replace with your actual credentials from Aiven):
 
 ```dotenv
-KAFKA_BROKER=pensions-kimaniwilfred95-d2b4.c.aivencloud.com:23362
+KAFKA_BROKER=your-cluster-url:23362
 KAFKA_CLIENT_ID=notification-service
 KAFKA_TOPIC=notifications
 KAFKA_SASL_MECHANISM=SCRAM-SHA-256
-KAFKA_SASL_USERNAME=avnadmin
-KAFKA_SASL_PASSWORD=AVNS_c0IOWKfVDMnMkP3F6Bj
+KAFKA_SASL_USERNAME=your-username
+KAFKA_SASL_PASSWORD=your-password
 KAFKA_SSL_CA_LOCATION=ca.pem
 MOCK_MODE=false
 ```
