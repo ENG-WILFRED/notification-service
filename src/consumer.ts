@@ -15,7 +15,7 @@ async function run(): Promise<void> {
   console.log('[CONSUMER] Connected and subscribed to notifications topic');
 
   await consumer.run({
-    eachMessage: async ({ message }) => {
+    eachMessage: async ({ message }: { message: any }) => {
       try {
         const payload: NotificationPayload = JSON.parse(message.value!.toString());
         console.log(`[CONSUMER] Received notification ${payload.id} (${payload.channel} → ${payload.to})`);

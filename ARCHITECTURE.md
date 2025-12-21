@@ -4,6 +4,15 @@
 
 The Notification Service is a distributed, event-driven system built on Kafka for reliable asynchronous notification delivery. It decouples request ingestion from message delivery, enabling scalability and fault tolerance.
 
+### Implementation & Kafka integration (current repo)
+
+- Language & runtime: Node.js with TypeScript
+- Kafka client: `node-rdkafka` (native librdkafka binding). The project uses dynamic imports of `node-rdkafka` and exposes both modern APIs and a kafkajs-compatible shim so existing code works.
+- Producer: `src/services/kafkaProducer.ts` — exposes `createProducer`/`initProducer`, `publishNotification`, `closeProducer`. Uses SASL/TLS config from `src/config.ts`.
+- Consumer: `src/services/kafkaConsumer.ts` — exposes `startConsumer(onMessage)` using `KafkaConsumer` and a `createConsumer()` shim adapting to legacy `kafkajs`-style `run({ eachMessage })`.
+- Configuration: `src/config.ts` reads env vars for `KAFKA_BROKER`, `KAFKA_TOPIC`, `KAFKA_SASL_MECHANISM`, `KAFKA_SASL_USERNAME`, `KAFKA_SASL_PASSWORD`, and `KAFKA_SSL_CA_LOCATION`.
+- Mock mode: Controlled by `MOCK_MODE` env var; when true the producer queues messages in memory and the `/queue` endpoint returns queued messages.
+
 ### Key Components
 
 1. **Producer API** (`src/app.js`)

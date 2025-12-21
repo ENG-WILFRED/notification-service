@@ -6,6 +6,10 @@ interface KafkaConfig {
   clientId: string;
   brokers: string[];
   topic: string;
+  saslMechanism?: string;
+  saslUsername?: string;
+  saslPassword?: string;
+  sslCaLocation?: string;
 }
 
 interface SmtpConfig {
@@ -35,8 +39,12 @@ const config: Config = {
   port: Number(process.env.PORT) || 5371,
   kafka: {
     clientId: process.env.KAFKA_CLIENT_ID || 'notification-service',
-    brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
-    topic: 'notifications'
+    brokers: [process.env.KAFKA_BROKER || 'pensions-kimaniwilfred95-d2b4.c.aivencloud.com:23362'],
+    topic: process.env.KAFKA_TOPIC || 'notifications',
+    saslMechanism: process.env.KAFKA_SASL_MECHANISM || 'SCRAM-SHA-256',
+    saslUsername: process.env.KAFKA_SASL_USERNAME || 'avnadmin',
+    saslPassword: process.env.KAFKA_SASL_PASSWORD || 'AVNS_c0IOWKfVDMnMkP3F6Bj',
+    sslCaLocation: process.env.KAFKA_SSL_CA_LOCATION || 'ca.pem'
   },
   smtp: {
     host: process.env.SMTP_HOST,
@@ -51,7 +59,7 @@ const config: Config = {
     from: process.env.TWILIO_FROM
   },
   env: process.env.NODE_ENV || 'development',
-  mockMode: process.env.MOCK_MODE === 'true' || !process.env.KAFKA_BROKER
+  mockMode: process.env.MOCK_MODE === 'true' || false
 };
 
 export default config;

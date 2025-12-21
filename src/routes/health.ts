@@ -21,7 +21,12 @@ import { Request, Response } from 'express';
  *                   type: string
  */
 async function healthRoute(_req: Request, res: Response): Promise<void> {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  const requestId = _req.headers['x-request-id'] as string || 'health-check';
+  const timestamp = new Date().toISOString();
+  console.log(`[HEALTH] GET /health received (request_id: ${requestId}, timestamp: ${timestamp})`);
+  const responseData = { status: 'ok', timestamp, request_id: requestId };
+  console.log(`[HEALTH] GET /health response: 200 OK (service_healthy: true)`);
+  res.json(responseData);
 }
 
 export { healthRoute };
