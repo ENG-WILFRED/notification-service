@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import http from 'http';
 import { createConsumer } from './services/kafkaConsumer';
 import * as emailProvider from './providers/email';
 import * as smsProvider from './providers/sms';
@@ -8,8 +9,23 @@ import { NotificationPayload } from './services/kafkaProducer';
 
 dotenv.config();
 
+let kafkaConsumerInstance: any = null;
+let httpServer: any = null;
+
+// If Render (or another platform) provides a PORT, bind a tiny HTTP listener
+// so the platform detects an open port for web services. When running as a
+// background worker this can be omitted by not setting `PORT` in the env.
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : undefined;
+if (port) {
+  httpServer = http.createServer((_req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('ok');
+  }).listen(port, () => console.log(`[CONSUMER] HTTP health listener bound on port ${port}`));
+}
+
 async function run(): Promise<void> {
   const consumer = await createConsumer();
+  kafkaConsumerInstance = consumer;
   await consumer.subscribe({ topic: config.kafka.topic, fromBeginning: false });
 
   console.log('[CONSUMER] Connected and subscribed to notifications topic');
@@ -62,6 +78,24 @@ async function sendWithRetry(
 
 process.on('SIGTERM', async () => {
   console.log('[CONSUMER] SIGTERM received, shutting down...');
+  try {
+    if (httpServer) {
+      await new Promise<void>((res) => httpServer.close(() => res()));
+      console.log('[CONSUMER] HTTP server closed');
+    }
+  } catch (e) {
+    console.warn('[CONSUMER] Error closing HTTP server', e);
+  }
+
+  try {
+    if (kafkaConsumerInstance && typeof kafkaConsumerInstance.disconnect === 'function') {
+      await kafkaConsumerInstance.disconnect();
+      console.log('[CONSUMER] Kafka consumer disconnected');
+    }
+  } catch (e) {
+    console.warn('[CONSUMER] Error disconnecting Kafka consumer', e);
+  }
+
   process.exit(0);
 });
 
