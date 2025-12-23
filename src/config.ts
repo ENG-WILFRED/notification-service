@@ -36,7 +36,8 @@ interface Config {
 }
 
 const config: Config = {
-  port: Number(process.env.PORT) || 5371,
+  // Producer (API) port — use PRODUCER_PORT to avoid colliding with consumer worker
+  port: Number(process.env.PRODUCER_PORT) || 5371,
   kafka: {
     clientId: process.env.KAFKA_CLIENT_ID || 'notification-service',
     brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],

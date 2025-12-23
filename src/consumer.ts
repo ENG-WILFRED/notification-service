@@ -12,15 +12,16 @@ dotenv.config();
 let kafkaConsumerInstance: any = null;
 let httpServer: any = null;
 
-// If Render (or another platform) provides a PORT, bind a tiny HTTP listener
-// so the platform detects an open port for web services. When running as a
-// background worker this can be omitted by not setting `PORT` in the env.
-const port = process.env.PORT ? parseInt(process.env.PORT, 10) : undefined;
-if (port) {
+// If Render (or another platform) provides a CONSUMER_PORT, bind a tiny HTTP
+// listener so the platform detects an open port for web services. When
+// running as a background worker this can be omitted by not setting
+// `CONSUMER_PORT` in the env.
+const consumerPort = process.env.CONSUMER_PORT ? parseInt(process.env.CONSUMER_PORT, 10) : undefined;
+if (consumerPort) {
   httpServer = http.createServer((_req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('ok');
-  }).listen(port, () => console.log(`[CONSUMER] HTTP health listener bound on port ${port}`));
+  }).listen(consumerPort, () => console.log(`[CONSUMER] HTTP health listener bound on port ${consumerPort}`));
 }
 
 async function run(): Promise<void> {
