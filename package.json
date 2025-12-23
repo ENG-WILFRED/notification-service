@@ -4,7 +4,7 @@
   "description": "Kafka-based notification service (email + SMS)",
   "main": "src/app.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp -r src/templates dist/",
     "start": "node dist/app.js",
     "consumer": "node dist/consumer.js",
     "dev": "ts-node src/app.ts",

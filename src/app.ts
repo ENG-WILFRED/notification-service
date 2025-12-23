@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import express, { Express } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './utils/swagger';
-import { initProducer, closeProducer, getMockQueue } from './services/kafkaProducer';
+import { initProducer, closeProducer } from './services/kafkaProducer';
 import { notifyRoute } from './routes/notify';
 import { healthRoute } from './routes/health';
 import config from './config';
@@ -19,25 +19,19 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.post('/notify', notifyRoute);
 app.get('/health', healthRoute);
 
-// Mock queue endpoint (for testing without Kafka)
+// Queue status endpoint
 app.get('/queue', (_req, res) => {
   const requestId = _req.headers['x-request-id'] as string || 'queue-check';
-  console.log(`[QUEUE] GET /queue received (request_id: ${requestId}, mode: ${config.mockMode ? 'mock' : 'kafka'})`);
-  if (config.mockMode) {
-    const queued = getMockQueue();
-    console.log(`[QUEUE] GET /queue response: 200 OK (queued_count: ${queued.length})`);
-    res.json({ mode: 'mock', queued_messages: queued, request_id: requestId });
-  } else {
-    console.log(`[QUEUE] GET /queue response: 200 OK (mode: kafka)`);
-    res.json({ mode: 'kafka', message: 'Messages are in Kafka broker', request_id: requestId });
-  }
+  console.log(`[QUEUE] GET /queue received (request_id: ${requestId})`);
+  console.log(`[QUEUE] GET /queue response: 200 OK (mode: kafka)`);
+  res.json({ mode: 'kafka', message: 'Messages are in Kafka broker', request_id: requestId });
 });
 
 // Initialize Kafka and start
 async function start(): Promise<void> {
   const startTime = Date.now();
   console.log(`[APP] === Notification Service Starting (timestamp: ${new Date().toISOString()}) ===`);
-  console.log(`[APP] Environment: ${config.env}, Mock mode: ${config.mockMode}`);
+  console.log(`[APP] Environment: ${config.env}`);
   console.log(`[APP] Kafka config: broker=${config.kafka.brokers.join(',')}, topic=${config.kafka.topic}, clientId=${config.kafka.clientId}`);
   
   try {
@@ -45,13 +39,7 @@ async function start(): Promise<void> {
     await initProducer();
     const initDuration = Date.now() - startTime;
     
-    if (config.mockMode) {
-      console.log(`[APP] ⚠️  MOCK MODE enabled (${initDuration}ms) - running without Kafka broker`);
-      console.log('[APP] Messages will be queued in memory');
-      console.log('[APP] Visit http://localhost:' + config.port + '/queue to view queued messages');
-    } else {
-      console.log(`[APP] ✓ Kafka producer initialized (${initDuration}ms)`);
-    }
+    console.log(`[APP] ✓ Kafka producer initialized (${initDuration}ms)`);
     
     app.listen(config.port, () => {
       const totalDuration = Date.now() - startTime;

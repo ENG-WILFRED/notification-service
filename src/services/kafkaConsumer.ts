@@ -18,10 +18,7 @@ function buildConsumerConfig(): { [k: string]: unknown } {
 }
 
 export async function startConsumer(onMessage: (payload: NotificationPayload) => void): Promise<{ stop: () => Promise<void> }> {
-  if (config.mockMode) {
-    console.log('[KAFKA] Mock mode: consumer not started');
-    return { stop: async () => {} };
-  }
+  // Start a real Kafka consumer and subscribe to the configured topic
 
   if (consumerInstance) {
     return {

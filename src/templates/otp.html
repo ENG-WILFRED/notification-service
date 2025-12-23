@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>OTP Code</title>
+    <style>
+      body{font-family:Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;background:#f6f8fb;color:#0b1226;margin:0;padding:24px}
+      .card{max-width:520px;margin:24px auto;background:#ffffff;border-radius:12px;box-shadow:0 6px 18px rgba(11,18,38,0.08);padding:28px}
+      .brand{font-weight:700;color:#0b5fff;margin-bottom:8px}
+      .lead{color:#394b6b;margin:12px 0 20px}
+      .otp{display:inline-block;font-size:28px;letter-spacing:6px;background:#f1f5ff;padding:12px 20px;border-radius:8px;font-weight:700;color:#0b1226}
+      .muted{color:#6b7386;font-size:13px;margin-top:18px}
+      .footer{font-size:12px;color:#97a0b9;margin-top:18px}
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="brand">Pension App</div>
+      <h2>Verification code</h2>
+      <p class="lead">Hi {{ name }}, use the code below to continue. It expires in 10 minutes.</p>
+
+      <div class="otp">{{ otp }}</div>
+
+      <p class="muted">If you didn't request this, please ignore this message or contact support.</p>
+
+      <div class="footer">Thanks — The Pension App Team</div>
+    </div>
+  </body>
+</html>

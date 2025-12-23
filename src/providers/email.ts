@@ -23,13 +23,18 @@ async function send(to: string, templateName: string, content: string): Promise<
     console.log(content);
     return;
   }
+  // Provide HTML body and a simple plaintext fallback by stripping tags
+  const plaintext = content.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ');
 
-  const result = await t.sendMail({
+  const mailOptions: nodemailer.SendMailOptions = {
     from: config.smtp.from,
     to,
     subject: `Notification: ${templateName}`,
-    text: content
-  });
+    text: plaintext,
+    html: content
+  };
+
+  const result = await t.sendMail(mailOptions);
   
   console.log(`[EMAIL] Sent to ${to}:`, result.messageId);
 }
