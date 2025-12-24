@@ -1,0 +1,11 @@
+Welcome, {{ name }}!
+
+Thanks for joining Pension App. {{ message }}
+
+Your temporary password: {{ temp_password }}
+
+This temporary password can be used to sign in only once. You will be prompted to create a permanent password when you sign in for the first time.
+
+To sign in and set your password, visit: {{ link }}
+
+If you have questions reply to this email or contact support.

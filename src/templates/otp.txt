@@ -1,0 +1,9 @@
+Pension App - Verification code
+
+Hi {{ name }}, use the code below to continue. It expires in 10 minutes.
+
+{{ otp }}
+
+If you didn't request this, please ignore this message or contact support.
+
+Thanks — The Pension App Team

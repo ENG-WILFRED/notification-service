@@ -48,11 +48,31 @@ export async function startConsumer(onMessage: (payload: NotificationPayload) =>
       consumer.subscribe([config.kafka.topic]);
       consumer.consume();
 
+      // Log rdkafka internal events for better visibility
+      consumer.on('event.error', (ev: any) => {
+        console.error('[KAFKA-CONSUMER] event.error', ev);
+      });
+
+      consumer.on('disconnected', (arg: any) => {
+        console.warn('[KAFKA-CONSUMER] disconnected', arg);
+      });
+
+      consumer.on('event.log', (logEvent: any) => {
+        // Debug-only: uncomment if you need verbose librdkafka logs
+        // console.debug('[KAFKA-CONSUMER] event.log', logEvent);
+      });
+
       consumer.on('data', (message: any) => {
         try {
           const value = message.value ? message.value.toString() : null;
+          const partition = message.partition;
+          const offset = message.offset;
+          const topic = message.topic;
           if (!value) return;
+          console.log(`[KAFKA] Raw message -> topic=${topic} partition=${partition} offset=${offset}`);
           const parsed = JSON.parse(value) as NotificationPayload;
+          console.log(`[KAFKA] Parsed message -> id=${parsed.id} channel=${parsed.channel} to=${parsed.to}`);
+          // Hand off to the higher-level onMessage handler
           onMessage(parsed);
         } catch (e) {
           console.error('[KAFKA] Failed to parse message', e);
@@ -88,12 +108,15 @@ export async function createConsumer(): Promise<any> {
 
   const ctrl = await startConsumer((payload) => {
     if (stopped) return;
+    console.log(`[KAFKA-SHIM] Received payload from rdkafka -> id=${payload.id} channel=${payload.channel} to=${payload.to}`);
     if (handler) {
       try {
         handler({ message: { value: Buffer.from(JSON.stringify(payload)) } });
       } catch (e) {
         console.error('[KAFKA] Shim handler error', e);
       }
+    } else {
+      console.warn('[KAFKA-SHIM] No handler registered yet to process incoming messages');
     }
   });
 
@@ -103,6 +126,7 @@ export async function createConsumer(): Promise<any> {
     },
     run: async ({ eachMessage }: { eachMessage: (arg: { message: { value: Buffer } }) => Promise<void> }) => {
       handler = eachMessage as unknown as (payload: any) => void;
+      console.log('[KAFKA-SHIM] run: handler registered for eachMessage');
       return;
     },
     disconnect: async () => {

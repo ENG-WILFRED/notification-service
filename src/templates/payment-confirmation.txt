@@ -1,0 +1,7 @@
+Payment received
+
+We received your payment of {{ amount }} on {{ date }}.
+
+Reference: {{ reference }}
+
+If you have questions contact support or visit your account: {{ dashboard_link }}

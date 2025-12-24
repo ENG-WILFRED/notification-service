@@ -1,5 +1,7 @@
 import dotenv from 'dotenv';
 import http from 'http';
+import fs from 'fs/promises';
+import path from 'path';
 import { createConsumer } from './services/kafkaConsumer';
 import * as emailProvider from './providers/email';
 import * as smsProvider from './providers/sms';
@@ -24,6 +26,43 @@ if (consumerPort) {
   }).listen(consumerPort, () => console.log(`[CONSUMER] HTTP health listener bound on port ${consumerPort}`));
 }
 
+// Helper to load text template and render with data
+async function renderSmsTemplate(templateName: string, data: Record<string, unknown> = {}): Promise<string> {
+  const projectRoot = process.cwd();
+  const candidateDirs = [
+    path.join(__dirname, 'templates'), // dist layout
+    path.join(projectRoot, 'src', 'templates'), // development layout
+    path.join(projectRoot, 'templates')
+  ];
+
+  // Strip .txt extension if present
+  let base = templateName.replace(/\.txt$/i, '');
+  
+  // Strip trailing _email, -email, _sms, -sms (same as template renderer does for HTML)
+  base = base.replace(/(?:[_-](?:email|sms))$/i, '');
+
+  for (const dir of candidateDirs) {
+    const txtPath = path.join(dir, `${base}.txt`);
+    try {
+      const tpl = await fs.readFile(txtPath, 'utf-8');
+      console.log(`[CONSUMER] Loaded SMS text template: ${base}.txt`);
+      // Render template by replacing {{ key }} placeholders
+      let rendered = tpl;
+      Object.keys(data).forEach((k) => {
+        const re = new RegExp(`{{\\s*${k}\\s*}}`, 'g');
+        rendered = rendered.replace(re, String(data[k] || ''));
+      });
+      return rendered;
+    } catch (_) {
+      // Continue to next directory
+    }
+  }
+
+  // Fallback: return stringified data if template not found
+  console.warn(`[CONSUMER] SMS text template not found for ${base}, using data fallback`);
+  return JSON.stringify(data);
+}
+
 async function run(): Promise<void> {
   const consumer = await createConsumer();
   kafkaConsumerInstance = consumer;
@@ -37,7 +76,15 @@ async function run(): Promise<void> {
         const payload: NotificationPayload = JSON.parse(message.value!.toString());
         console.log(`[CONSUMER] Received notification ${payload.id} (${payload.channel} → ${payload.to})`);
 
-        const rendered = render(payload.template, payload.data || {});
+        let rendered: string;
+
+        if (payload.channel === 'sms') {
+          // Use text template for SMS
+          rendered = await renderSmsTemplate(payload.template, payload.data || {});
+        } else {
+          // Use HTML template for email
+          rendered = render(payload.template, payload.data || {});
+        }
 
         if (payload.channel === 'email') {
           await sendWithRetry(() => emailProvider.send(payload.to, payload.template, rendered), payload);

@@ -1,0 +1,7 @@
+Pension statement for {{ period }}
+
+Hi {{ name }}, here is a summary of your pension for {{ period }}.
+
+{{ statement_text }}
+
+For details visit your dashboard: {{ dashboard_link }}

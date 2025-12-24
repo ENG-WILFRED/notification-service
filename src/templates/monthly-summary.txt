@@ -1,0 +1,7 @@
+Your monthly summary — {{ month }}
+
+Hi {{ name }}, here are the highlights for {{ month }}.
+
+{{ bullets_text }}
+
+See full details: {{ dashboard_link }}

@@ -1,60 +1,47 @@
 import nodemailer from 'nodemailer';
 import config from '../config';
 
-async function send(to: string, templateName: string, content: string): Promise<void> {
-  if (!config.smtp.host || !config.smtp.user || !config.smtp.pass) {
-    console.log(`[EMAIL] Mock → ${to} (${templateName}) - SMTP credentials not configured`);
-    console.log(`[EMAIL] To enable real email: set SMTP_HOST, SMTP_USER, SMTP_PASS`);
-    return;
+let transporter: any = null;
+
+function getTransporter() {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: config.smtp.host,
+      port: config.smtp.port,
+      secure: config.smtp.port === 465, 
+      auth: {
+        user: config.smtp.user,
+        pass: config.smtp.pass
+      }
+    });
   }
+  return transporter;
+}
 
-  console.log(`[EMAIL] Attempting to send via ${config.smtp.host}:${config.smtp.port} (secure=${config.smtp.port === 465})`);
+async function send(to: string, templateName: string, content: string): Promise<void> {
 
-  // Create a fresh transporter per send to avoid dead socket issues in NAT'd cloud environments
-  const transporter = nodemailer.createTransport({
-    host: config.smtp.host,
-    port: config.smtp.port,
-    secure: config.smtp.port === 465, // TLS if port 465
-    auth: { user: config.smtp.user, pass: config.smtp.pass },
-    // Critical timeouts for cloud environments where connections silently drop
-    connectionTimeout: 10_000,
-    greetingTimeout: 10_000,
-    socketTimeout: 10_000,
-    logger: true, // Enable nodemailer debug logging
-    debug: true
-  });
+  // Provide plaintext fallback by stripping HTML tags
+  const plaintext = content.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ');
+
+  const mailOptions = {
+    to,
+    from: config.smtp.from,
+    subject: `Notification: ${templateName}`,
+    text: plaintext,
+    html: content
+  };
 
   try {
-    console.log(`[EMAIL] Verifying SMTP connection to ${config.smtp.host}:${config.smtp.port}...`);
-    await transporter.verify();
-    console.log(`[EMAIL] ✓ SMTP connection verified`);
-
-    // Provide HTML body and a simple plaintext fallback by stripping tags
-    const plaintext = content.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ');
-
-    const mailOptions: nodemailer.SendMailOptions = {
-      from: config.smtp.from,
-      to,
-      subject: `Notification: ${templateName}`,
-      text: plaintext,
-      html: content
-    };
-
-    console.log(`[EMAIL] Sending email to ${to}...`);
+    console.log(`[EMAIL] Sending via SMTP (${config.smtp.host}:${config.smtp.port}) to ${to}...`);
+    const transporter = getTransporter();
     const result = await transporter.sendMail(mailOptions);
-    console.log(`[EMAIL] ✓ Sent to ${to}:`, result.messageId);
+    console.log(`[EMAIL] ✓ Sent to ${to}, MessageID:`, result.messageId);
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     console.error(`[EMAIL] ✗ Send failed: ${errMsg}`);
+    console.error('[EMAIL] SMTP Config:', `host=${config.smtp.host}, port=${config.smtp.port}, user=${config.smtp.user}, from=${config.smtp.from}`);
+
     throw err;
-  } finally {
-    // Always close connection immediately to prevent socket reuse issues
-    try {
-      await transporter.close();
-      console.log(`[EMAIL] Connection closed`);
-    } catch (e) {
-      // ignore close errors
-    }
   }
 }
 
